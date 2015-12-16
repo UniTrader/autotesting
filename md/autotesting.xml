@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<mdscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Autotesting" xsi:noNamespaceSchemaLocation="http://utnas/~unitrader/XRebirthxsds/md.xsd">
+  <cues>
+    <cue name="Verify_Stations" onfail="cancel">
+      <conditions>
+        <check_value value="true" comment="switch for deactivating"/>
+      </conditions>
+      <delay exact="10s"/>
+      <actions>
+        <find_station name="$stations" space="player.galaxy" multiple="true"/>
+        <set_value name="$ZoneMessage" exact="'\nStations not in the right Zones:'"/>
+        <do_all exact="$stations.count" counter="$i">
+          <transform_position name="$SectorPosition" refposition="$stations.{$i}.zone.position" refrotation="$stations.{$i}.zone.rotation">
+            <position value="$stations.{$i}.position"/>
+          </transform_position>
+          <find_zone name="$PhysicalZone" space="$stations.{$i}.sector" priorityzone="true" tempzone="false">
+            <match_distance max="$stations.{$i}.distanceto.{$stations.{$i}.zone}" value="$SectorPosition"/>
+          </find_zone>
+          <do_if value="not $PhysicalZone.exists">
+            <!-- Border Case - not relevant -->
+            <!--set_value name="$ZoneMessage" exact="$ZoneMessage + '\n%1 in %2 - No Zone found within Distance of Offset (wtf)'.[$stations.{$i}.knownname,$stations.{$i}.zone.knownname]"/-->
+          </do_if>
+          <do_elseif value="$PhysicalZone != $stations.{$i}.zone">
+            <set_value name="$ZoneMessage" exact="$ZoneMessage + '\n%1 in %2 - Is actually closser to %3 ( %4m vs %5m - %6m difference)'.[$stations.{$i}.knownname,$stations.{$i}.zone.knownname,$PhysicalZone.knownname,$stations.{$i}.distanceto.{$stations.{$i}.zone},$stations.{$i}.distanceto.{$PhysicalZone},$stations.{$i}.distanceto.{$stations.{$i}.zone}-$stations.{$i}.distanceto.{$PhysicalZone}]"/>
+          </do_elseif>
+          <!--do_else comment="$PhysicalZone == $stations.{$i}.zone">
+            <set_value name="$ZoneMessage" exact="$ZoneMessage + '\n%1 in %2 - is placed correctly'.[$stations.{$i}.knownname,$stations.{$i}.zone.knownname]"/>
+          </do_else-->
+        </do_all>
+        <debug_text filter="general" text="$ZoneMessage"/>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>
